@@ -1,0 +1,6 @@
+requests
+flake8
+black
+tqdm
+pandas
+plotly
