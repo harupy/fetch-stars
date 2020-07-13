@@ -69,8 +69,6 @@ async function main(): Promise<void> {
     return;
   }
 
-  console.log(token);
-
   const api = createApi(token);
   const starEndPoint = `repos/${owner}/${repo}/stargazers`;
   const resp = await api.get(starEndPoint);
