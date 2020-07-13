@@ -38,7 +38,7 @@ def get_token():
     if TOKEN_ENV_VAR in os.environ:
         return os.getenv(TOKEN_ENV_VAR)
 
-    raise Exception("TOKEN not found")
+    raise Exception("`GITHUB_TOKEN` not found")
 
 
 def extract_last_page_num(link_str):
