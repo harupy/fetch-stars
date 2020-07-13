@@ -12,7 +12,7 @@ jobs:
           command: pip install -r requirements.txt
       - run:
           name: Create the star-count plot
-          command: python fetch_stars.py
+          command: python fetch_stars.py -o mlflow -r mlflow -f stars.html
 
       - store_artifacts:
           path: ./stars.html
