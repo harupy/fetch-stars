@@ -64,7 +64,7 @@ async function main(): Promise<void> {
   const { owner, repo, csv_path } = parseArgs();
 
   const token = getToken();
-  if (token === undefined) {
+  if (token === undefined || token === "") {
     console.log("You need to set 'GITHUB_TOKEN'");
     return;
   }
