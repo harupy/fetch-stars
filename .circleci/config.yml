@@ -1,23 +1,53 @@
 version: 2.1
 
 jobs:
-  create_plot:
+  fetch_stars:
+    docker:
+      - image: circleci/node
+
+    steps:
+      - checkout
+
+      - run:
+          working_directory: src/ts
+          command: npm install
+
+      - run:
+          working_directory: src/ts
+          command: npm run build
+
+      - run:
+          working_directory: src/ts
+          command: node fetch_star.js  -o mlflow -r mlflow -c stars.csv
+
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - ts/src/stars.csv
+
+  plot_stars:
     docker:
       - image: circleci/python:3.7
 
     steps:
       - checkout
+
       - run:
-          name: Install dependencies
-          command: pip install -r requirements.txt
+          command: pip install -r src/python/requirements.txt
+
+      - attach_workspace:
+          at: /tmp/workspace
+
       - run:
           name: Create the star-count plot
-          command: python fetch_stars.py -o mlflow -r mlflow -f stars.html
+          command: python src/python/fetch_stars.py -c stars.csv
 
       - store_artifacts:
-          path: ./stars.html
+          path: /stars.html
 
 workflows:
   main:
     jobs:
-      - create_plot
+      - fetch_stars
+      - plot_stars:
+          requires: fetch_stars
