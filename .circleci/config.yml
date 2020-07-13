@@ -50,4 +50,5 @@ workflows:
     jobs:
       - fetch_stars
       - plot_stars:
-          requires: fetch_stars
+          requires:
+            - fetch_stars
