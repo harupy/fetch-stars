@@ -63,7 +63,7 @@ def fetch_stars(owner, repo):
 
     # TODO: Call APIs asynchronously
     stars = []
-    for page_num in range(1, 20 + 1):
+    for page_num in range(1, 100 + 1):
         # log progress with the api usage limit
         rate_limit_resp = api.get("/rate_limit")
         print(f"{page_num} / {last_page_num}", rate_limit_resp.json()["rate"])
