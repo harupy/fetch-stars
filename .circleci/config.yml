@@ -39,8 +39,7 @@ jobs:
           at: .
 
       - run:
-          name: Create the star-count plot
-          command: python src/python/fetch_stars.py -c src/ts/stars.csv
+          command: python src/python/plot_stars.py -c src/ts/stars.csv
 
       - store_artifacts:
           path: /stars.html
