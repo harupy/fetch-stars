@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import re
@@ -52,17 +53,17 @@ def extract_last_page_num(link_str):
     return int(re.findall(r"\?page=(\d+)>", link_str)[-1])
 
 
-def fetch_stars():
+def fetch_stars(owner, repo):
     token = get_token()
     api = GitHubApi(token)
-    stargazers_end_point = "/repos/{}/{}/stargazers".format("mlflow", "mlflow")
+    stargazers_end_point = "/repos/{}/{}/stargazers".format(owner, repo)
 
     resp = api.get(stargazers_end_point)
     last_page_num = extract_last_page_num(resp.headers["link"])  # starts from 1
 
     # TODO: Call APIs asynchronously
     stars = []
-    for page_num in range(1, last_page_num + 1):
+    for page_num in range(1, 20 + 1):
         # log progress with the api usage limit
         rate_limit_resp = api.get("/rate_limit")
         print(f"{page_num} / {last_page_num}", rate_limit_resp.json()["rate"])
@@ -80,7 +81,22 @@ def save_plotly_figure(fig, path):
     plotly.offline.plot(fig, filename=path, include_plotlyjs="cdn", auto_open=False)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Fetch stars")
+    parser.add_argument("-o", "--owner", help="A repository owner", required=True)
+    parser.add_argument("-r", "--repo", help="A repository name", required=True)
+    parser.add_argument(
+        "-f",
+        "--fig-path",
+        help="An output figure path",
+        required=False,
+        default="stars.html",
+    )
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
 
     # column names
     STARRED_AT = "starred_at"
@@ -88,7 +104,7 @@ def main():
     CUMULATIVE_STAR_COUNT = "star_count"
 
     df = (
-        pd.DataFrame(fetch_stars())
+        pd.DataFrame(fetch_stars(args.owner, args.repo))
         .pipe(lambda df_: df_.assign(**{STARRED_AT: pd.to_datetime(df_[STARRED_AT])}))
         .pipe(lambda df_: df_.groupby(df_[STARRED_AT].dt.floor("d")))
         .size()
@@ -100,7 +116,7 @@ def main():
 
     fig = px.scatter(df, x=STARRED_AT, y=CUMULATIVE_STAR_COUNT)
     fig.update_layout(xaxis={"title": "time (UTC)"})
-    save_plotly_figure(fig, "stars.html")
+    save_plotly_figure(fig, args.fig_path)
 
 
 if __name__ == "__main__":
