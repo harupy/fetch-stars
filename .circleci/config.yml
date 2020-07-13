@@ -4,23 +4,26 @@ jobs:
   fetch_stars:
     docker:
       - image: circleci/node
-    working_directory: src/ts
+
     steps:
       - checkout
 
       - run:
+          working_directory: src/ts
           command: npm install
 
       - run:
+          working_directory: src/ts
           command: npm run build
 
       - run:
+          working_directory: src/ts
           command: node fetch_stars.js  -o mlflow -r mlflow -c stars.csv
 
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
-            - stars.csv
+            - src/ts/stars.csv
 
   plot_stars:
     docker:
