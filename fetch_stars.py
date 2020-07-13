@@ -101,7 +101,7 @@ def main():
     # column names
     STARRED_AT = "starred_at"
     STAR_COUNT = "star_count"
-    CUMULATIVE_STAR_COUNT = "star_count"
+    CUMULATIVE_STAR_COUNT = "cumulative_star_count"
 
     df = (
         pd.DataFrame(fetch_stars(args.owner, args.repo))
@@ -111,7 +111,7 @@ def main():
         .reset_index()
         .sort_values(STARRED_AT)
         .rename(columns={0: STAR_COUNT})
-        .assign(cumulative_star_count=lambda df_: df_[STAR_COUNT].cumsum())
+        .assign(**{CUMULATIVE_STAR_COUNT: lambda df_: df_[STAR_COUNT].cumsum()})
     )
 
     fig = px.scatter(df, x=STARRED_AT, y=CUMULATIVE_STAR_COUNT)
