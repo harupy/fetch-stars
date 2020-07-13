@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import re
+import time
 
 import requests
 import pandas as pd
@@ -70,6 +71,8 @@ def fetch_stars(owner, repo):
 
         stars_resp = api.get(stargazers_end_point, params={"page": page_num})
         stars.extend(map(lambda x: {"starred_at": x["starred_at"]}, stars_resp.json()))
+
+        time.sleep(1)
 
     return stars
 
