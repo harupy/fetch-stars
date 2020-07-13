@@ -6,7 +6,8 @@ import re
 import requests
 import pandas as pd
 import plotly
-import plotly.express as px
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
 
 
 class GitHubApi(requests.Session):
@@ -81,6 +82,19 @@ def save_plotly_figure(fig, path):
     plotly.offline.plot(fig, filename=path, include_plotlyjs="cdn", auto_open=False)
 
 
+def replace_extension(path, ext):
+    if not ext.startswith("."):
+        raise "`ext` must start with '.'"
+
+    base = os.path.splitext(path)[0]
+    return f"{base}{ext}"
+
+
+def add_suffix(path, suffix, sep="_"):
+    base, ext = os.path.splitext(path)
+    return f"{base}{sep}{suffix}{ext}"
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Fetch stars")
     parser.add_argument("-o", "--owner", help="A repository owner", required=True)
@@ -102,20 +116,76 @@ def main():
     STARRED_AT = "starred_at"
     STAR_COUNT = "star_count"
     CUMULATIVE_STAR_COUNT = "cumulative_star_count"
+    QUARTER = "quarter"
 
-    df = (
-        pd.DataFrame(fetch_stars(args.owner, args.repo))
-        .pipe(lambda df_: df_.assign(**{STARRED_AT: pd.to_datetime(df_[STARRED_AT])}))
-        .pipe(lambda df_: df_.groupby(df_[STARRED_AT].dt.floor("d")))
+    def assign_quarter(df):
+        return df.assign(
+            **{
+                QUARTER: lambda df_: df_[STARRED_AT].dt.year.astype(str)
+                + "-Q"
+                + df[STARRED_AT].dt.quarter.astype(str)
+            }
+        )
+
+    stars = fetch_stars(args.owner, args.repo)
+    df = pd.DataFrame(stars)
+    csv_path = replace_extension(args.fig_path, ".csv")
+    df = df.assign(**{STARRED_AT: pd.to_datetime(df[STARRED_AT])})
+
+    # daily star count
+    daily = (
+        df.pipe(lambda df_: df_.groupby(df_[STARRED_AT].dt.floor("d")))
         .size()
         .reset_index()
         .sort_values(STARRED_AT)
         .rename(columns={0: STAR_COUNT})
         .assign(**{CUMULATIVE_STAR_COUNT: lambda df_: df_[STAR_COUNT].cumsum()})
     )
+    daily.to_csv(add_suffix(csv_path, "daily"), index=False)
 
-    fig = px.scatter(df, x=STARRED_AT, y=CUMULATIVE_STAR_COUNT)
-    fig.update_layout(xaxis={"title": "time (UTC)"})
+    # quarterly star count
+    quarterly = (
+        df.pipe(assign_quarter)
+        .pipe(lambda df_: df_.groupby(QUARTER))
+        .size()
+        .reset_index()
+        .sort_values(QUARTER)
+        .rename(columns={0: STAR_COUNT})
+        .assign(**{CUMULATIVE_STAR_COUNT: lambda df_: df_[STAR_COUNT].cumsum()})
+    )
+    quarterly.to_csv(add_suffix(csv_path, "quarterly"), index=False)
+
+    # create plots
+    scatter_options = {"mode": "markers"}
+    fig = make_subplots(rows=2, cols=1, subplot_titles=["Daily", "Quarterly"])
+    fig.add_trace(
+        go.Scatter(
+            x=daily[STARRED_AT],
+            y=daily[CUMULATIVE_STAR_COUNT],
+            name="Daily",
+            **scatter_options,
+        ),
+        row=1,
+        col=1,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=quarterly[QUARTER],
+            y=quarterly[CUMULATIVE_STAR_COUNT],
+            name="Quarterly",
+            **scatter_options,
+        ),
+        row=2,
+        col=1,
+    )
+
+    fig.update_yaxes(title_text=CUMULATIVE_STAR_COUNT, row=1, col=1)
+    fig.update_yaxes(title_text=CUMULATIVE_STAR_COUNT, row=2, col=1)
+    fig.update_layout(
+        title_text=f"Repository URL: https://github.com/{args.owner}/{args.repo}",
+        showlegend=False,
+    )
+
     save_plotly_figure(fig, args.fig_path)
 
 
