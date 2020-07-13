@@ -21,7 +21,7 @@ jobs:
           command: node fetch_stars.js  -o mlflow -r mlflow -c stars.csv
 
       - persist_to_workspace:
-          root: /tmp/workspace
+          root: .
           paths:
             - src/ts/stars.csv
 
@@ -36,11 +36,11 @@ jobs:
           command: pip install -r src/python/requirements.txt
 
       - attach_workspace:
-          at: /tmp/workspace
+          at: .
 
       - run:
           name: Create the star-count plot
-          command: python src/python/fetch_stars.py -c stars.csv
+          command: python src/python/fetch_stars.py -c src/ts/stars.csv
 
       - store_artifacts:
           path: /stars.html
