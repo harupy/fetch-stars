@@ -76,6 +76,7 @@ async function main(): Promise<void> {
   const pages = Array.from(Array(lastPage), (_, i) => i + 1);
   const urls = pages.map(page => `${starEndPoint}?page=${page}`);
 
+  // Split the API requests into small chunks to prevent GitHub from raising the rate-limit error
   let stars: Star[] = [];
   const chunkSize = 30;
   const indices = Array.from(Array(Math.ceil(lastPage / chunkSize)).keys());
@@ -87,8 +88,7 @@ async function main(): Promise<void> {
 
     try {
       const chunk = await Promise.all(promises);
-      console.log(chunk);
-      stars.concat(
+      stars = stars.concat(
         chunk
           .map(s => s.data)
           .reduce((a, b) => [...a, ...b], [])
@@ -98,9 +98,6 @@ async function main(): Promise<void> {
       throw err;
     }
   }
-
-  console.log(stars.length);
-  console.log(stars);
 
   const csvWriter = createObjectCsvWriter({
     path: csv_path,
