@@ -17,9 +17,6 @@ jobs:
           command: npm run build
 
       - run:
-          command: env
-
-      - run:
           working_directory: src/ts
           command: node fetch_stars.js  -o mlflow -r mlflow -c stars.csv
 

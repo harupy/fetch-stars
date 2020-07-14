@@ -87,6 +87,7 @@ async function main(): Promise<void> {
 
     try {
       const chunk = await Promise.all(promises);
+      console.log(chunk);
       stars.concat(
         chunk
           .map(s => s.data)
