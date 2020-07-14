@@ -45,7 +45,7 @@ jobs:
           command: python src/python/plot_stars.py -c src/ts/stars.csv
 
       - store_artifacts:
-          path: /src/ts/stars.html
+          path: src/ts/stars.html
 
 workflows:
   main:
