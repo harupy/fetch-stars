@@ -98,6 +98,9 @@ async function main(): Promise<void> {
     }
   }
 
+  console.log(stars.length);
+  console.log(stars);
+
   const csvWriter = createObjectCsvWriter({
     path: csv_path,
     header: [{ id: "starred_at", title: "starred_at" }],
