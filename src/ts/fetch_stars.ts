@@ -75,12 +75,28 @@ async function main(): Promise<void> {
   const lastPage = extractLastPage(resp.headers.link);
   const pages = Array.from(Array(lastPage), (_, i) => i + 1);
   const urls = pages.map(page => `${starEndPoint}?page=${page}`);
-  const promises = urls.map(url => api.get(url));
-  const starsResp = await Promise.all(promises);
-  const stars = starsResp
-    .map(s => s.data)
-    .reduce((a, b) => [...a, ...b], [])
-    .map(({ starred_at }: Star) => ({ starred_at }));
+
+  let stars: Star[] = [];
+  const chunkSize = 30;
+  const indices = Array.from(Array(Math.ceil(lastPage / chunkSize)).keys());
+
+  for (const index of indices) {
+    const start = index * chunkSize;
+    const end = (index + 1) * chunkSize;
+    const promises = urls.slice(start, end).map(url => api.get(url));
+
+    try {
+      const chunk = await Promise.all(promises);
+      stars.concat(
+        chunk
+          .map(s => s.data)
+          .reduce((a, b) => [...a, ...b], [])
+          .map(({ starred_at }: Star) => ({ starred_at }))
+      );
+    } catch (err) {
+      throw err;
+    }
+  }
 
   const csvWriter = createObjectCsvWriter({
     path: csv_path,
