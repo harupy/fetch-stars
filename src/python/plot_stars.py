@@ -103,8 +103,8 @@ def main():
         col=1,
     )
 
-    fig.update_yaxes(title_text=CUMULATIVE_STAR_COUNT, row=1, col=1)
-    fig.update_yaxes(title_text=CUMULATIVE_STAR_COUNT, row=2, col=1)
+    fig.update_yaxes(title_text="# of stars", row=1, col=1)
+    fig.update_yaxes(title_text="# of stars", row=2, col=1)
     fig.update_layout(showlegend=False)
 
     fig_path = replace_extension(args.csv_path, ".html")
