@@ -16,7 +16,7 @@
     "typescript": "^3.9.6"
   },
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "csv-writer": "^1.6.0",
     "yargs": "^15.4.1"
   }
